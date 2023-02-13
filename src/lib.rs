@@ -20,7 +20,7 @@ use implot_sys as sys;
 
 // TODO(4bb4) facade-wrap these?
 pub use self::{context::*, plot::*, plot_elements::*};
-use std::os::raw::c_char;
+use std::{ffi::CString, os::raw::c_char};
 pub use sys::{ImPlotLimits, ImPlotPoint, ImPlotRange, ImVec2, ImVec4};
 
 mod context;
@@ -576,6 +576,12 @@ pub fn is_plot_y_axis_hovered(y_axis_choice: Option<YAxisChoice>) -> bool {
 /// Returns true if the given item in the legend of the current plot is hovered.
 pub fn is_legend_entry_hovered(legend_entry: &str) -> bool {
     unsafe { sys::ImPlot_IsLegendEntryHovered(legend_entry.as_ptr() as *const c_char) }
+}
+
+/// Adds a textual annotation to the current plot.
+pub fn add_annotation(x: f64, y: f64, pix_offset: ImVec2, label: &str) {
+    let label = CString::new(label).unwrap();
+    unsafe { sys::ImPlot_AnnotateStr(x, y, pix_offset, label.as_ptr()) }
 }
 
 // --- Demo window -------------------------------------------------------------------------------
