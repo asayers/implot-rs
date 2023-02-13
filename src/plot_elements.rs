@@ -433,3 +433,38 @@ impl PlotStems {
         }
     }
 }
+
+pub struct PlotShaded {
+    label: CString,
+}
+
+impl PlotShaded {
+    pub fn new(label: &str) -> PlotShaded {
+        PlotShaded {
+            label: CString::new(label).unwrap(),
+        }
+    }
+
+    pub fn plot(&self, xs: &[f64], ys_lo: &[f64], ys_hi: &[f64]) {
+        // The C function called here segfaults if you pass empty slices;
+        // prefer a panic.
+        if xs.is_empty() || ys_lo.is_empty() || ys_hi.is_empty() {
+            panic!(
+                "Passed empty slices to PlotShaded for {}",
+                self.label.to_str().unwrap(),
+            );
+        }
+        let count = xs.len().min(ys_lo.len()).min(ys_hi.len());
+        unsafe {
+            sys::ImPlot_PlotShadeddoublePtrdoublePtrdoublePtr(
+                self.label.as_ptr() as *const i8,
+                xs.as_ptr(),
+                ys_lo.as_ptr(),
+                ys_hi.as_ptr(),
+                count as i32, // "as" casts saturate as of Rust 1.45. This is safe here.
+                0,            // No offset
+                std::mem::size_of::<f64>() as i32, // Stride, set to one f64 for the standard use case
+            )
+        };
+    }
+}
